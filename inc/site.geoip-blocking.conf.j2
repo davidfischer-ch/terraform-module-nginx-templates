@@ -1,0 +1,5 @@
+{% if geoip_blocking_enabled %}
+if ($allow_visit = block) {
+    return 403;
+}
+{% endif %}

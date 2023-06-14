@@ -1,0 +1,22 @@
+    proxy_hide_header X-Content-Type-Options;
+    proxy_hide_header X-Frame-Options;
+    proxy_hide_header X-Xss-Protection;
+    proxy_hide_header Referrer-Policy;
+
+    # Stops a browser from trying to MIME-sniff the content type
+    add_header X-Content-Type-Options "{{ x_content_type_options|default('nosniff') }}" always;
+
+    # XSS Protection
+    add_header X-Frame-Options "{{ x_frame_options|default('DENY') }}" always;
+    add_header X-Xss-Protection "{{ x_xss_protection|default('1; mode=block') }}" always;
+
+    # https://scotthelme.co.uk/content-security-policy-an-introduction/
+    {% if content_security_policy is defined %}
+    proxy_hide_header Content-Security-Policy;
+    add_header Content-Security-Policy "{{ content_security_policy }}" always;
+    {% else %}
+    # WARNING: Its recommended to define a security policy.
+    {% endif %}
+
+    # https://scotthelme.co.uk/a-new-security-header-referrer-policy/
+    add_header Referrer-Policy "{{ referrer_policy|default('no-referrer-when-downgrade') }}" always;

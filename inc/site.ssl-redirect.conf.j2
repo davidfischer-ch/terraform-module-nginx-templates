@@ -1,0 +1,5 @@
+{% if not with_ssl and redirect_ssl %}
+if ($http_x_forwarded_proto != 'https') {
+    rewrite ^ https://$host$request_uri? permanent;
+}
+{% endif %}
