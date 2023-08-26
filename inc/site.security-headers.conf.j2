@@ -4,7 +4,7 @@
     proxy_hide_header Referrer-Policy;
 
     # Stops a browser from trying to MIME-sniff the content type
-    {% if x_content_type_options|default('nosniff') != '' -%}
+    {% if x_content_type_options is undefined or x_content_type_options != '' -%}
     add_header X-Content-Type-Options "{{ x_content_type_options|default('nosniff') }}" always;
     {%- endif %}
 
