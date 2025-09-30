@@ -1,4 +1,4 @@
-    {% if htpasswd|default('')|length > 0 %}ssl on;{% endif %}
+    {% if htpasswd|default('')|length > 0 %}
 
     auth_basic           "Nothing Here";
     auth_basic_user_file sites-auth/{{ name }}.htpasswd;
