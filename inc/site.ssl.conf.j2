@@ -3,31 +3,33 @@
     ssl_certificate     sites-ssl/{{ name }}.crt;
     ssl_certificate_key sites-ssl/{{ name }}.key;
 
-    # Disable SSLv3 since it's less secure than TLS
-    # http://en.wikipedia.org/wiki/Secure_Sockets_Layer#SSL_3.0
-    ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+    # Modern TLS only - TLS 1.0/1.1 deprecated by RFC 8996 (2021).
+    ssl_protocols TLSv1.2 TLSv1.3;
 
-    # Enable session resumption to improve https performance
-    # http://vincent.bernat.im/en/blog/2011-ssl-session-reuse-rfc5077.html
+    # Mozilla "intermediate" cipher suite - AEAD only (GCM, ChaCha20-Poly1305).
+    # https://ssl-config.mozilla.org/#server=nginx&config=intermediate
+    ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384;
+    ssl_prefer_server_ciphers off;
+
+    # Session resumption. Disable tickets - a leaked ticket key compromises
+    # forward secrecy retroactively across the lifetime of the key.
     ssl_session_cache   shared:SSL:50m;
-    ssl_session_timeout 5m;
+    ssl_session_timeout 1d;
+    ssl_session_tickets off;
 
-    # Enable server-side protection from BEAST attacks
-    # http://blog.ivanristic.com/2013/09/is-beast-still-a-threat.html
-    ssl_prefer_server_ciphers on;
-
-    # Ciphers chosen for forward secrecy and compatibility
-    # http://blog.ivanristic.com/2013/08/configuring-apache-nginx-and-openssl-for-forward-secrecy.html
-    ssl_ciphers "ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA:ECDHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA256:DHE-RSA-AES128-SHA256:DHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES256-GCM-SHA384:AES128-GCM-SHA256:AES256-SHA256:AES128-SHA256:AES256-SHA:AES128-SHA:DES-CBC3-SHA:HIGH:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4";
+    # OCSP stapling - faster TLS handshake, no client-side CA phone-home.
+    # Requires `resolver` at http scope (see nginx security.conf).
+    ssl_stapling on;
+    ssl_stapling_verify on;
 
     {% if with_dhparam|default(true) %}
-    # Diffie-Hellman parameter for DHE cipher suites, recommended 2048 bits
+    # Diffie-Hellman parameter for DHE cipher suites, 2048 bits minimum.
     ssl_dhparam sites-dhparam/{{ name }}.pem;
     {% endif %}
 
     {% if with_hsts|default(true) %}
-    # Enable HSTS (HTTP Strict Transport Security)
+    # HSTS - 2 years + subdomains. Add `; preload` only once every *.{{ '{' }}domain{{ '}' }} is
+    # HTTPS-only and submitted to https://hstspreload.org (irreversible commitment).
     # https://developer.mozilla.org/en-US/docs/Security/HTTP_Strict_Transport_Security
-    # to avoid ssl stripping https://en.wikipedia.org/wiki/SSL_stripping#SSL_stripping
-    add_header Strict-Transport-Security "max-age=31536000;" always;
+    add_header Strict-Transport-Security "max-age=63072000; includeSubDomains" always;
     {% endif %}

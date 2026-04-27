@@ -2,15 +2,23 @@
     proxy_hide_header X-Frame-Options;
     proxy_hide_header X-Xss-Protection;
     proxy_hide_header Referrer-Policy;
+    proxy_hide_header Permissions-Policy;
 
     # Stops a browser from trying to MIME-sniff the content type
     {% if x_content_type_options is undefined or x_content_type_options != '' -%}
     add_header X-Content-Type-Options "{{ x_content_type_options|default('nosniff') }}" always;
     {%- endif %}
 
-    # XSS Protection
+    # Clickjacking protection
     add_header X-Frame-Options "{{ x_frame_options|default('DENY') }}" always;
-    add_header X-Xss-Protection "{{ x_xss_protection|default('1; mode=block') }}" always;
+
+    # X-Xss-Protection is deprecated and Chrome removed it; sending it can
+    # introduce its own XSS in legacy IE/Edge. We strip it from upstream above
+    # and do NOT re-emit. https://owasp.org/www-project-secure-headers/
+
+    # Permissions-Policy - disable browser features the app doesn't need.
+    # Override per-site for Home Assistant etc. that genuinely use geolocation/microphone.
+    add_header Permissions-Policy "{{ permissions_policy|default('camera=(), geolocation=(), microphone=(), interest-cohort=()') }}" always;
 
     # https://scotthelme.co.uk/content-security-policy-an-introduction/
     {% if content_security_policy is defined %}
