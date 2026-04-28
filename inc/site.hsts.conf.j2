@@ -1,6 +1,0 @@
-{% if with_hsts %}
-# HSTS - 2 years + subdomains. Add `; preload` only once every *.{domain} is
-# HTTPS-only and submitted to https://hstspreload.org (irreversible commitment).
-# https://developer.mozilla.org/en-US/docs/Security/HTTP_Strict_Transport_Security
-add_header Strict-Transport-Security "max-age=63072000; includeSubDomains" always;
-{% endif %}
