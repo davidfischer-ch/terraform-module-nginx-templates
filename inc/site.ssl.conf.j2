@@ -17,10 +17,14 @@
     ssl_session_timeout 1d;
     ssl_session_tickets off;
 
+    {% if with_ocsp_stapling|default(false) %}
     # OCSP stapling - faster TLS handshake, no client-side CA phone-home.
-    # Requires `resolver` at http scope (see nginx security.conf).
+    # Requires `resolver` at http scope (see nginx security.conf) and the cert
+    # to carry an OCSP responder URL in its AIA extension. Let's Encrypt phased
+    # out OCSP from issued certs in early 2025; not useful with LE-only setups.
     ssl_stapling on;
     ssl_stapling_verify on;
+    {% endif %}
 
     {% if with_dhparam|default(true) %}
     # Diffie-Hellman parameter for DHE cipher suites, 2048 bits minimum.
@@ -31,5 +35,6 @@
     # HSTS - 2 years + subdomains. Add `; preload` only once every *.{{ '{' }}domain{{ '}' }} is
     # HTTPS-only and submitted to https://hstspreload.org (irreversible commitment).
     # https://developer.mozilla.org/en-US/docs/Security/HTTP_Strict_Transport_Security
+    proxy_hide_header Strict-Transport-Security;
     add_header Strict-Transport-Security "max-age=63072000; includeSubDomains" always;
     {% endif %}
