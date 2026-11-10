@@ -1,5 +1,17 @@
 # Changelog
 
+## Release v1.1.1 (2026-11-10)
+
+Diff: https://github.com/davidfischer-ch/terraform-module-nginx-templates/compare/1.1.0...1.1.1
+
+### Features
+
+Upstreams:
+
+* Add `site.upstream.conf.j2`, a site's upstream resolved through Docker's DNS at runtime
+    * A stopped container's site answers 502, and nginx still starts
+    * Requires nginx 1.27.3 or later
+
 ## Release v1.1.0 (2026-04-28)
 
 ### Minor compatibility breaks
