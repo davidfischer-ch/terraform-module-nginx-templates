@@ -1,0 +1,7 @@
+{#- The site's upstream, resolved through Docker's DNS while nginx runs. A stopped container's
+    site answers 502, and the edge still starts. Needs nginx 1.27.3 or later. #}
+upstream {{ name|replace('-', '_') }}_upstream {
+    zone     {{ name|replace('-', '_') }}_upstream 64k;
+    resolver 127.0.0.11 valid=10s ipv6=off;
+    server   {{ address }}:{{ port|int }} resolve;
+}
